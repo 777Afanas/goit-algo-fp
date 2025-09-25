@@ -1,0 +1,438 @@
+# ------------------------- ОГОЛОШЕННЯ КЛАСУ ВУЗЛА -------------------------
+
+# Клас Node представляє окремий вузол однозв'язного списку
+class Node:
+  # Конструктор приймає дані вузла і створює посилання next (спочатку None)
+  def __init__(self, data=None):
+    # Зберігаємо дані у вузлі
+    self.data = data
+    # Ініціалізуємо посилання на наступний вузол як None
+    self.next = None
+
+
+# ---------------------- ОГОЛОШЕННЯ КЛАСУ СПИСКУ -------------------------
+
+# Клас LinkedList описує сам однозв'язний список
+class LinkedList:
+  # Конструктор: створює порожній список (голова відсутня)
+  def __init__(self):
+    # head зберігає посилання на перший вузол (спочатку None)
+    self.head = None
+
+  # Метод для вставки елемента у кінець списку
+  def insert_at_end(self, data):
+    # Створюємо новий вузол з переданими даними
+    new_node = Node(data)
+    # Якщо список порожній — робимо новий вузол головою
+    if not self.head:
+      # Присвоюємо новий вузол як голову
+      self.head = new_node
+      # Завершуємо метод, бо вставку виконано
+      return
+    # Інакше шукаємо останній вузол (хвіст)
+    cur = self.head
+    # Поки є наступний вузол — рухаємось далі
+    while cur.next:
+      # Переходимо до наступного вузла
+      cur = cur.next
+    # Додаємо новий вузол у кінець списку
+    cur.next = new_node
+
+  # Метод для друку списку
+  def print_list(self):
+    # Починаємо з голови
+    current = self.head
+    # Поки є вузол — виводимо його дані
+    while current:
+      # Друкуємо значення поточного вузла
+      print(current.data)
+      # Переходимо до наступного вузла
+      current = current.next
+
+  # --------------------- РОЗВОРОТ СПИСКУ ---------------------
+
+  # Реверсування списку (розворот порядку вузлів)
+  def reverse(self):
+    # prev — попередній вузол, спочатку None
+    prev = None
+    # current — поточний вузол, починаємо з голови
+    current = self.head
+    # Поки є вузол
+    while current:
+      # Зберігаємо наступний вузол перед зміною посилання
+      nxt = current.next
+      # Розвертаємо посилання поточного вузла на попередній
+      current.next = prev
+      # Зсуваємо prev на поточний вузол
+      prev = current
+      # Переходимо до збереженого наступного вузла
+      current = nxt
+    # Після проходу всіх вузлів prev стане новою головою
+    self.head = prev
+
+
+# --------------------- СПРОЩЕНЕ СОРТУВАННЯ ЗЛИТТЯМ (СТЕНД-АЛОН) ---------------------
+
+# Рекурсивна функція сортування злиттям для однозв'язного списку
+def merge_sort(head):
+  # Якщо список порожній або містить лише один вузол — він уже відсортований
+  if head is None or head.next is None:
+    # Повертаємо head без змін
+    return head
+
+  # --------------------- РОЗДІЛ СПИСКУ НА ДВІ ПОЛОВИНИ ---------------------
+  # Використовуємо slow/fast вказівники для пошуку середини
+  slow = head
+  # fast стартує з наступного вузла
+  fast = head.next
+  # Рухаємось: fast по два кроки, slow по одному
+  while fast and fast.next:
+    # Зсуваємо slow на один вузол
+    slow = slow.next
+    # Зсуваємо fast на два вузли
+    fast = fast.next.next
+  # Після циклу slow стоїть на останньому вузлі лівої половини
+  right_head = slow.next
+  # Розриваємо список: ліва половина закінчується на slow
+  slow.next = None
+  # Ліва голова лишається початковим head
+  left_head = head
+
+  # --------------------- РЕКУРСІЯ ДЛЯ ОБОХ ПОЛОВИН ---------------------
+  # Сортуємо ліву половину
+  left_sorted = merge_sort(left_head)
+  # Сортуємо праву половину
+  right_sorted = merge_sort(right_head)
+
+  # --------------------- ЗЛИТТЯ ДВОХ ВІДСОРТОВАНИХ ПІДСПИСКІВ ---------------------
+  # Повертаємо злитий відсортований список
+  return merge(left_sorted, right_sorted)
+
+
+# Допоміжна функція для злиття двох відсортованих списків (ітеративно)
+def merge(a, b):
+  # Створюємо фіктивний вузол, щоб спростити побудову нового списку
+  dummy = Node(0)
+  # tail завжди вказує на останній вузол сформованого результату
+  tail = dummy
+  # Поки обидва підсписки мають елементи
+  while a and b:
+    # Якщо a менше або рівне b — додаємо a до результату
+    if a.data <= b.data:
+      # Хвіст вказує на a
+      tail.next = a
+      # Зсуваємо a на наступний вузол
+      a = a.next
+    else:
+      # Інакше приєднуємо b
+      tail.next = b
+      # Зсуваємо b на наступний вузол
+      b = b.next
+    # Пересуваємо хвіст на щойно доданий вузол
+    tail = tail.next
+  # Якщо в одному зі списків ще є елементи — приєднуємо їх "як є"
+  tail.next = a if a else b
+  # Повертаємо голову нового відсортованого списку (пропускаємо dummy)
+  return dummy.next
+
+
+# --------------------- МЕРДЖ ДВОХ СПИСКІВ ---------------------
+
+# Статичний метод: об’єднання двох відсортованих списків у новий відсортований
+@staticmethod
+def merge_two_sorted(list1, list2):
+  # Створюємо новий список-результат
+  merged = LinkedList()
+  # Викликаємо допоміжний статичний метод для злиття двох відсортованих голів
+  merged.head = LinkedList._sorted_merge_static(list1.head, list2.head)
+  # Повертаємо новий відсортований список
+  return merged
+
+# Допоміжний статичний метод для злиття (без self) — додаємо в клас динамічно
+def _sorted_merge_static(a: Node, b: Node):
+  # Якщо ліва частина порожня — повертаємо праву
+  if a is None:
+    return b
+  # Якщо права частина порожня — повертаємо ліву
+  if b is None:
+    return a
+  # Якщо значення у a не більше за b — a стає початком
+  if a.data <= b.data:
+    # Рекурсивно з'єднуємо хвіст a з b
+    a.next = _sorted_merge_static(a.next, b)
+    # Повертаємо голову, що починається з a
+    return a
+  else:
+    # Інакше починаємо з b
+    b.next = _sorted_merge_static(a, b.next)
+    # Повертаємо голову, що починається з b
+    return b
+
+# Прив'язуємо статичні методи до класу LinkedList (щоб зберегти ваш інтерфейс)
+# Присвоюємо функцію як статичний метод класу
+LinkedList.merge_two_sorted = staticmethod(merge_two_sorted)
+# Присвоюємо допоміжну функцію як статичний метод класу
+LinkedList._sorted_merge_static = staticmethod(_sorted_merge_static)
+
+
+# --------------------- ДЕМОНСТРАЦІЯ РОБОТИ ---------------------
+
+# Створюємо список і додаємо елементи
+llist = LinkedList()
+# Додаємо 5 у кінець
+llist.insert_at_end(5)
+# Додаємо 10 у кінець
+llist.insert_at_end(10)
+# Додаємо 3 у кінець
+llist.insert_at_end(3)
+# Додаємо 8 у кінець
+llist.insert_at_end(8)
+
+# Друкуємо початковий список
+print("Початковий список:")
+# Викликаємо друк
+llist.print_list()
+
+# Реверс списку
+# Розвертаємо порядок вузлів
+llist.reverse()
+# Друкуємо після реверсу
+print("\nСписок після реверсу:")
+# Викликаємо друк
+llist.print_list()
+
+# Сортування злиттям (СТЕНД-АЛОН)
+# Оновлюємо голову списку результатом merge_sort
+llist.head = merge_sort(llist.head)
+# Друкуємо після сортування
+print("\nСписок після сортування злиттям:")
+# Викликаємо друк
+llist.print_list()
+
+# Створюємо два відсортовані списки для перевірки merge_two_sorted
+a = LinkedList()
+# Додаємо 1
+a.insert_at_end(1)
+# Додаємо 4
+a.insert_at_end(4)
+# Додаємо 7
+a.insert_at_end(7)
+
+# Створюємо другий відсортований список
+b = LinkedList()
+# Додаємо 2
+b.insert_at_end(2)
+# Додаємо 5
+b.insert_at_end(5)
+# Додаємо 6
+b.insert_at_end(6)
+
+# Друкуємо перший відсортований список
+print("\nПерший відсортований список:")
+# Викликаємо друк
+a.print_list()
+# Друкуємо другий відсортований список
+print("Другий відсортований список:")
+# Викликаємо друк
+b.print_list()
+
+# Об’єднуємо два відсортовані списки у один
+merged = LinkedList.merge_two_sorted(a, b)
+# Друкуємо результат об’єднання
+print("\nОб'єднаний відсортований список:")
+# Викликаємо друк
+merged.print_list()
+
+
+
+
+
+
+
+
+
+# # ------------------------- ОГОЛОШЕННЯ КЛАСУ ВУЗЛА -------------------------
+
+# # Клас Node представляє окремий вузол однозв'язного списку
+# class Node:
+#   # Конструктор приймає дані вузла і створює посилання next (спочатку None)
+#   def __init__(self, data=None):
+#     # Зберігаємо дані у вузлі
+#     self.data = data
+#     # Ініціалізуємо посилання на наступний вузол як None
+#     self.next = None
+
+
+# # ---------------------- ОГОЛОШЕННЯ КЛАСУ СПИСКУ -------------------------
+
+# # Клас LinkedList описує сам однозв'язний список
+# class LinkedList:
+#   # Конструктор: створює порожній список (голова відсутня)
+#   def __init__(self):
+#     # head зберігає посилання на перший вузол (спочатку None)
+#     self.head = None
+
+#   # Метод для вставки елемента у кінець списку
+#   def insert_at_end(self, data):
+#     # Створюємо новий вузол з переданими даними
+#     new_node = Node(data)
+#     # Якщо список порожній — робимо новий вузол головою
+#     if not self.head:
+#       self.head = new_node
+#       return
+#     # Інакше шукаємо останній вузол (хвіст)
+#     cur = self.head
+#     # Поки є наступний вузол — рухаємось далі
+#     while cur.next:
+#       cur = cur.next
+#     # Додаємо новий вузол у кінець списку
+#     cur.next = new_node
+
+#   # Метод для друку списку
+#   def print_list(self):
+#     # Починаємо з голови
+#     current = self.head
+#     # Поки є вузол — виводимо його дані
+#     while current:
+#       print(current.data)
+#       current = current.next
+
+#   # --------------------- РОЗВОРОТ СПИСКУ ---------------------
+
+#   # Реверсування списку (розворот порядку вузлів)
+#   def reverse(self):
+#     # prev — попередній вузол, спочатку None
+#     prev = None
+#     # current — поточний вузол, починаємо з голови
+#     current = self.head
+#     # Поки є вузол
+#     while current:
+#       # Зберігаємо наступний вузол перед зміною посилання
+#       nxt = current.next
+#       # Розвертаємо посилання поточного вузла на попередній
+#       current.next = prev
+#       # Зсуваємо prev на поточний вузол
+#       prev = current
+#       # Переходимо до збереженого наступного вузла
+#       current = nxt
+#     # Після проходу всіх вузлів prev стане новою головою
+#     self.head = prev
+
+#   # --------------------- СОРТУВАННЯ ЗЛИТТЯМ ---------------------
+
+#   # Публічний метод сортування злиттям
+#   def sort(self):
+#     # Запускаємо рекурсивне сортування від голови
+#     self.head = self._merge_sort(self.head)
+
+#   # Приватний рекурсивний метод для сортування
+#   def _merge_sort(self, head: Node):
+#     # Якщо список порожній або один вузол — він уже відсортований
+#     if head is None or head.next is None:
+#       return head
+#     # Ділимо список навпіл
+#     left_head, right_head = self._split_in_half(head)
+#     # Рекурсивно сортуємо ліву частину
+#     left_sorted = self._merge_sort(left_head)
+#     # Рекурсивно сортуємо праву частину
+#     right_sorted = self._merge_sort(right_head)
+#     # Зливаємо дві відсортовані частини
+#     return self._sorted_merge(left_sorted, right_sorted)
+
+#   # Допоміжний метод: ділить список навпіл
+#   def _split_in_half(self, head: Node):
+#     # Якщо менше двох елементів — нема що ділити
+#     if head is None or head.next is None:
+#       return head, None
+#     # Використовуємо slow/fast вказівники
+#     slow = head
+#     fast = head.next
+#     while fast and fast.next:
+#       slow = slow.next
+#       fast = fast.next.next
+#     # Після циклу slow стоїть на кінці лівої половини
+#     right_head = slow.next
+#     slow.next = None
+#     return head, right_head
+
+#   # Допоміжний метод: злиття двох відсортованих списків
+#   def _sorted_merge(self, a: Node, b: Node):
+#     if a is None:
+#       return b
+#     if b is None:
+#       return a
+#     if a.data <= b.data:
+#       result = a
+#       result.next = self._sorted_merge(a.next, b)
+#     else:
+#       result = b
+#       result.next = self._sorted_merge(a, b.next)
+#     return result
+
+#   # --------------------- МЕРДЖ ДВОХ СПИСКІВ ---------------------
+
+#   # Статичний метод: об’єднання двох відсортованих списків
+#   @staticmethod
+#   def merge_two_sorted(list1, list2):
+#     # Створюємо новий список
+#     merged = LinkedList()
+#     # Викликаємо допоміжний метод для злиття
+#     merged.head = LinkedList._sorted_merge_static(list1.head, list2.head)
+#     return merged
+
+#   # Допоміжний статичний метод для злиття (без self)
+#   @staticmethod
+#   def _sorted_merge_static(a: Node, b: Node):
+#     if a is None:
+#       return b
+#     if b is None:
+#       return a
+#     if a.data <= b.data:
+#       a.next = LinkedList._sorted_merge_static(a.next, b)
+#       return a
+#     else:
+#       b.next = LinkedList._sorted_merge_static(a, b.next)
+#       return b
+
+
+# # --------------------- ДЕМОНСТРАЦІЯ РОБОТИ ---------------------
+
+# # Створюємо список і додаємо елементи
+# llist = LinkedList()
+# llist.insert_at_end(5)
+# llist.insert_at_end(10)
+# llist.insert_at_end(3)
+# llist.insert_at_end(8)
+
+# print("Початковий список:")
+# llist.print_list()
+
+# # Реверс
+# llist.reverse()
+# print("\nСписок після реверсу:")
+# llist.print_list()
+
+# # Сортування
+# llist.sort()
+# print("\nСписок після сортування злиттям:")
+# llist.print_list()
+
+# # Створюємо два відсортовані списки для перевірки merge
+# a = LinkedList()
+# a.insert_at_end(1)
+# a.insert_at_end(4)
+# a.insert_at_end(7)
+
+# b = LinkedList()
+# b.insert_at_end(2)
+# b.insert_at_end(5)
+# b.insert_at_end(6)
+
+# print("\nПерший відсортований список:")
+# a.print_list()
+# print("Другий відсортований список:")
+# b.print_list()
+
+# merged = LinkedList.merge_two_sorted(a, b)
+# print("\nОб'єднаний відсортований список:")
+# merged.print_list()
